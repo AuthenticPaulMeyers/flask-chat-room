@@ -58,6 +58,13 @@ def home():
 # the chat room route 
 @app.route('/room')
 def room():
+    # Check if the user is logged in to access this route
+    room = session.get('room')
+    name = session.get('name')
+
+    if name is None or room is None or room not in rooms:
+        return redirect(url_for('home'))
+    
     return render_template('room.html')
 
 if __name__=="__main__":
