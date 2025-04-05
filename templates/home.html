@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<form method="post" autocomplete="off">
+    <div>
+        <label for="name">Name <span style="color: red;">*</span></label> <br>
+        <input type="text" name="name" id="name" placeholder="Name" value="{{name}}" ><br>
+    </div> <br>
+    <div class="join">
+        <label for="name">Room Code <span style="color: red;">*</span></label> <br>
+        <input type="text" name="code" id="code" placeholder="Room Code" value="{{code}}"> <br> <br>
+        <button type="submit" name="join" class="join-btn">Join Room</button>
+    </div> <br>
+    <div class="create">
+        <button type="submit" name="create" class="create-btn">Create Room</button>
+    </div>
+
+    {% if error %}
+        <ul>
+            <li>{{ error }}</li>
+        </ul>
+    {% endif %}
+</form>
+
+
+{%  endblock %}
