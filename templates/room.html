@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="message-container">
+    <h2>Chat: {{ room }}</h2>
+    <div id="messages"></div>
+    <div class="input">
+        <input type="text" name="message" id="message" placeholder="Message">
+        <button name="send" id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+
+<script type="text/javascript" defer>
+    var socketio = io()
+    const messages = document.querySelector('#messages')
+
+    const createMessage = (name, msg) => {
+        const content = `
+            <div>
+                <p>
+                    <strong>${name}</strong>: ${msg}
+                    <span>${new Date().toLocaleTimeString()}</span>
+                </p>
+            </div>
+        `;
+        messages.innerHTML += content;
+    }
+
+    socketio.on("message", (data) => {
+        createMessage(data.name, data.message);
+    });
+
+    const sendMessage = () => {
+        const message = document.querySelector('#message')
+
+        if (message.value == ""){
+            return
+        }
+        socketio.emit('message', {data: message.value})
+        message.value = ""; // clear the input field
+    }
+</script>
+
+{% endblock %}

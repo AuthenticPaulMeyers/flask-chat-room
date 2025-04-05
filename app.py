@@ -1,5 +1,5 @@
 from flask import Flask, render_template, session, redirect, request, url_for
-from flask_socketio import SocketIO, join_room, leave_room
+from flask_socketio import SocketIO, join_room, leave_room, send
 import random
 from string import ascii_uppercase
 
@@ -46,7 +46,7 @@ def home():
             room = generate_random_code(4)
             rooms[room] = {"members": 0, "messages": []}
         elif code not in rooms:
-            return render_template('home.html', error='Room does not exist!', name=name, code=code)
+            return render_template('home.html', error='Chat does not exist!', name=name, code=code)
         
 
         session['name'] = name
@@ -65,7 +65,58 @@ def room():
     if name is None or room is None or room not in rooms:
         return redirect(url_for('home'))
     
-    return render_template('room.html')
+    return render_template('room.html', room=room, title="Chat Room")
+
+# connect to the socket function for the user to join the room
+@socketio.on('connect')
+def connect(auth):
+    name = session.get('name')
+    room = session.get('room')
+
+    if not room or not room:
+        return 
+    
+    if room not in rooms:
+        leave_room(room)
+        return
+    
+    join_room(room)
+    send({"name": name, "message": "joined the chat!"}, to=room)
+    rooms[room]['members'] += 1
+
+# disconnect to the socket function for the user to leave the room
+@socketio.on('disconnect')
+def disconnect():
+    name = session.get('name')
+    room = session.get('room')
+
+    leave_room(room)
+
+    if room in rooms:
+        rooms[room]['members'] -= 1
+        if rooms[room]['members'] <= 0:
+            del rooms[room]    
+
+    send({"name": name, "message": "left the chat!"}, to=room)
+
+# socket allow the sending and receiving of messages
+@socketio.on('message')
+def message(data):
+    name = session.get('name')
+    room = session.get('room')
+
+    if room not in rooms: 
+        return
+    
+    # save the messages in the dctionary
+
+    content = {
+        'name': name,
+        'message': data['data']
+    }
+
+    send(content, to=room)
+    rooms[room]['messages'].append(content)
 
 if __name__=="__main__":
     socketio.run(app, debug=True)
